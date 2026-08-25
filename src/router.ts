@@ -2,7 +2,7 @@ import { parsePrivateKey, signIntent } from "./signing.js";
 import { CircuitBreaker } from "./circuit-breaker.js";
 import { GatewayError, TransportError } from "./errors.js";
 import type {
-  AgenticWalletRouterOptions,
+  WireSwitchOptions,
   CircuitBreakerConfig,
   PaymentIntent,
   RoutePaymentOptions,
@@ -12,14 +12,14 @@ import type {
 import { DEFAULT_GATEWAY_URL, SIGNING_ALG } from "./types.js";
 
 /**
- * Client SDK for routing an agentic wallet payment through a protocol
- * translation gateway.
+ * Client SDK for posting a locally signed payment intent to a
+ * translation gateway. Author: Varun M
  *
  * The circuit breaker runs locally and in-memory. Budgets are reserved under
  * a mutex before any signing or HTTP. Intents are signed with Ed25519
  * (`@noble/ed25519`) over canonical JSON.
  */
-export class AgenticWalletRouter {
+export class WireSwitch {
   private readonly seed: Uint8Array;
   private readonly circuitBreaker: CircuitBreaker;
   private readonly gatewayUrl: string;
@@ -33,7 +33,7 @@ export class AgenticWalletRouter {
    * @param options.gatewayUrl Optional override for `ROUTER_GATEWAY_URL`.
    * @param options.apiKey Optional issued developer key sent as Bearer.
    */
-  constructor(encryptedPrivateKey: string, options: AgenticWalletRouterOptions) {
+  constructor(encryptedPrivateKey: string, options: WireSwitchOptions) {
     if (options === undefined || options === null || typeof options !== "object") {
       throw new TypeError("Constructor options with a circuitBreaker config are required.");
     }

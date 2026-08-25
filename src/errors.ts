@@ -1,12 +1,12 @@
 /**
- * Base error for all client-side failures originating in this SDK.
+ * Base error for all client-side failures originating in this SDK. Author: Varun M
  */
-export class AgenticWalletRouterError extends Error {
+export class WireSwitchError extends Error {
   readonly code: string;
 
   constructor(message: string, options?: { code?: string; cause?: unknown }) {
     super(message, options?.cause !== undefined ? { cause: options.cause } : undefined);
-    this.name = "AgenticWalletRouterError";
+    this.name = "WireSwitchError";
     this.code = options?.code ?? "ROUTER_ERROR";
     Object.setPrototypeOf(this, new.target.prototype);
   }
@@ -16,7 +16,7 @@ export class AgenticWalletRouterError extends Error {
  * Base class for local circuit-breaker rejections. These are thrown before
  * signing or sending, so no network request is made.
  */
-export class CircuitBreakerError extends AgenticWalletRouterError {
+export class CircuitBreakerError extends WireSwitchError {
   readonly amountUSD: number;
   readonly limitUSD: number;
   readonly spentUSD: number | undefined;
@@ -68,7 +68,7 @@ export class HourlyLimitError extends CircuitBreakerError {
 /**
  * Thrown when the HTTP transport fails (DNS, TLS, connection reset, missing fetch).
  */
-export class TransportError extends AgenticWalletRouterError {
+export class TransportError extends WireSwitchError {
   constructor(message: string, options?: { cause?: unknown }) {
     super(message, { code: "TRANSPORT_ERROR", cause: options?.cause });
     this.name = "TransportError";
@@ -79,7 +79,7 @@ export class TransportError extends AgenticWalletRouterError {
  * Thrown when the gateway returns a non-success HTTP status, invalid body,
  * or an explicit failure payload.
  */
-export class GatewayError extends AgenticWalletRouterError {
+export class GatewayError extends WireSwitchError {
   readonly statusCode: number | undefined;
   readonly body: unknown;
 
@@ -97,7 +97,7 @@ export class GatewayError extends AgenticWalletRouterError {
 /**
  * Thrown when constructor arguments are missing or malformed.
  */
-export class InvalidKeyError extends AgenticWalletRouterError {
+export class InvalidKeyError extends WireSwitchError {
   constructor(message: string) {
     super(message, { code: "INVALID_KEY" });
     this.name = "InvalidKeyError";

@@ -11,9 +11,9 @@ export interface CircuitBreakerConfig {
 }
 
 /**
- * Constructor options for {@link AgenticWalletRouter}.
+ * Constructor options for {@link WireSwitch}. Author: Varun M
  */
-export interface AgenticWalletRouterOptions {
+export interface WireSwitchOptions {
   circuitBreaker: CircuitBreakerConfig;
   /**
    * Optional gateway URL override. When omitted, the client uses
@@ -31,7 +31,7 @@ export interface AgenticWalletRouterOptions {
 }
 
 /**
- * Input to {@link AgenticWalletRouter.routePayment}.
+ * Input to {@link WireSwitch.routePayment}.
  */
 export interface RoutePaymentOptions {
   /** Ingress protocol identifier, e.g. `GOOGLE_AP2`. */

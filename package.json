@@ -1,7 +1,7 @@
 {
-  "name": "agentic-wallet-router",
-  "version": "1.0.1",
-  "description": "TypeScript client SDK that routes agentic wallet payments across protocols with local circuit-breaker limits and Ed25519-signed intents.",
+  "name": "wireswitch",
+  "version": "1.1.0",
+  "description": "TypeScript client SDK that signs payment intents locally and posts them to a translation gateway, with in-process circuit-breaker limits.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -24,15 +24,14 @@
     "test:watch": "vitest"
   },
   "keywords": [
+    "wireswitch",
     "wallet",
-    "router",
-    "agentic",
     "payments",
     "sdk",
     "ed25519",
     "circuit-breaker"
   ],
-  "author": "agentic-wallet-router contributors",
+  "author": "Varun M",
   "license": "MIT",
   "engines": {
     "node": ">=18"
@@ -44,5 +43,11 @@
     "@types/node": "^22.13.10",
     "typescript": "^5.8.2",
     "vitest": "^3.0.9"
+  },
+  "homepage": "https://wireswitch.io",
+  "bugs": "https://github.com/vrmta/wireswitch/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vrmta/wireswitch.git"
   }
 }

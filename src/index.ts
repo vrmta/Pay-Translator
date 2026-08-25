@@ -1,7 +1,7 @@
-export { AgenticWalletRouter } from "./router.js";
+export { WireSwitch } from "./router.js";
 
 export type {
-  AgenticWalletRouterOptions,
+  WireSwitchOptions,
   CircuitBreakerConfig,
   PaymentIntent,
   RoutePaymentOptions,
@@ -12,7 +12,7 @@ export type {
 export { DEFAULT_GATEWAY_URL, SIGNING_ALG } from "./types.js";
 
 export {
-  AgenticWalletRouterError,
+  WireSwitchError,
   CircuitBreakerError,
   GatewayError,
   HourlyLimitError,

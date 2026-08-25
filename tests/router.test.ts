@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { canonicalJson } from "../src/canonical.js";
 import { bytesToHex } from "../src/bytes.js";
 import {
-  AgenticWalletRouter,
+  WireSwitch,
   DEFAULT_GATEWAY_URL,
   GatewayError,
   HourlyLimitError,
@@ -46,7 +46,7 @@ function gatewayOk(overrides: Record<string, unknown> = {}): Response {
   });
 }
 
-describe("AgenticWalletRouter", () => {
+describe("WireSwitch", () => {
   const fetchMock = vi.fn();
   const originalGateway = process.env["ROUTER_GATEWAY_URL"];
 
@@ -67,10 +67,10 @@ describe("AgenticWalletRouter", () => {
 
   describe("constructor / init", () => {
     it("accepts a hex Ed25519 seed and circuitBreaker config", () => {
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 500 },
       });
-      expect(router).toBeInstanceOf(AgenticWalletRouter);
+      expect(router).toBeInstanceOf(WireSwitch);
     });
 
     it("accepts a 0x-prefixed hex seed and a base64 seed", () => {
@@ -80,14 +80,14 @@ describe("AgenticWalletRouter", () => {
 
       expect(
         () =>
-          new AgenticWalletRouter(`0x${hex}`, {
+          new WireSwitch(`0x${hex}`, {
             circuitBreaker: { maxPerTransactionUSD: 10, maxPerHourUSD: 10 },
           }),
       ).not.toThrow();
 
       expect(
         () =>
-          new AgenticWalletRouter(base64, {
+          new WireSwitch(base64, {
             circuitBreaker: { maxPerTransactionUSD: 10, maxPerHourUSD: 10 },
           }),
       ).not.toThrow();
@@ -95,22 +95,22 @@ describe("AgenticWalletRouter", () => {
 
     it("rejects missing or malformed key material", () => {
       const options = { circuitBreaker: { maxPerTransactionUSD: 10, maxPerHourUSD: 10 } };
-      expect(() => new AgenticWalletRouter("", options)).toThrow(InvalidKeyError);
-      expect(() => new AgenticWalletRouter("not-a-key", options)).toThrow(InvalidKeyError);
+      expect(() => new WireSwitch("", options)).toThrow(InvalidKeyError);
+      expect(() => new WireSwitch("not-a-key", options)).toThrow(InvalidKeyError);
     });
 
     it("rejects missing or non-positive circuitBreaker limits", () => {
       const key = randomSeedHex();
-      expect(() => new AgenticWalletRouter(key, undefined as never)).toThrow(TypeError);
+      expect(() => new WireSwitch(key, undefined as never)).toThrow(TypeError);
       expect(
         () =>
-          new AgenticWalletRouter(key, {
+          new WireSwitch(key, {
             circuitBreaker: { maxPerTransactionUSD: 0, maxPerHourUSD: 10 },
           }),
       ).toThrow(TypeError);
       expect(
         () =>
-          new AgenticWalletRouter(key, {
+          new WireSwitch(key, {
             circuitBreaker: { maxPerTransactionUSD: 10, maxPerHourUSD: -1 },
           }),
       ).toThrow(TypeError);
@@ -119,7 +119,7 @@ describe("AgenticWalletRouter", () => {
 
   describe("circuit breaker", () => {
     it("rejects amounts strictly greater than maxPerTransactionUSD without sending", async () => {
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 50, maxPerHourUSD: 500 },
       });
 
@@ -136,7 +136,7 @@ describe("AgenticWalletRouter", () => {
 
     it("allows an amount equal to maxPerTransactionUSD", async () => {
       fetchMock.mockResolvedValue(gatewayOk({ amount: 50 }));
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 50, maxPerHourUSD: 500 },
         gatewayUrl: "https://gateway.test/v1/translate",
       });
@@ -150,7 +150,7 @@ describe("AgenticWalletRouter", () => {
 
     it("rejects when the rolling hourly budget would be exceeded, without sending", async () => {
       fetchMock.mockResolvedValue(gatewayOk({ amount: 80 }));
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 100 },
       });
 
@@ -171,7 +171,7 @@ describe("AgenticWalletRouter", () => {
   describe("routePayment", () => {
     it("POSTs a signed intent and returns TranslationResponse", async () => {
       fetchMock.mockResolvedValue(gatewayOk());
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 500 },
         gatewayUrl: "https://gateway.test/v1/translate",
       });
@@ -203,7 +203,7 @@ describe("AgenticWalletRouter", () => {
     it("uses ROUTER_GATEWAY_URL when no gatewayUrl option is provided", async () => {
       process.env["ROUTER_GATEWAY_URL"] = "https://env-gateway.test/v1/translate";
       fetchMock.mockResolvedValue(gatewayOk());
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 500 },
       });
 
@@ -213,7 +213,7 @@ describe("AgenticWalletRouter", () => {
 
     it("falls back to the default localhost gateway URL", async () => {
       fetchMock.mockResolvedValue(gatewayOk());
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 500 },
       });
 
@@ -223,7 +223,7 @@ describe("AgenticWalletRouter", () => {
 
     it("sends Authorization Bearer when apiKey is provided", async () => {
       fetchMock.mockResolvedValue(gatewayOk());
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 500 },
         apiKey: "pt_test_unit",
       });
@@ -237,7 +237,7 @@ describe("AgenticWalletRouter", () => {
     it("includes a verifiable Ed25519 signature over canonical intent JSON", async () => {
       const seed = ed25519.utils.randomPrivateKey();
       fetchMock.mockResolvedValue(gatewayOk());
-      const router = new AgenticWalletRouter(bytesToHex(seed), {
+      const router = new WireSwitch(bytesToHex(seed), {
         circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 500 },
       });
 
@@ -279,7 +279,7 @@ describe("AgenticWalletRouter", () => {
 
     it("wraps network failures as TransportError and does not consume hourly budget", async () => {
       fetchMock.mockRejectedValue(new TypeError("fetch failed"));
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 40 },
       });
 
@@ -295,7 +295,7 @@ describe("AgenticWalletRouter", () => {
 
     it("wraps HTTP failures as GatewayError", async () => {
       fetchMock.mockResolvedValue(jsonResponse({ error: "nope" }, 502));
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 500 },
       });
 
@@ -314,7 +314,7 @@ describe("AgenticWalletRouter", () => {
         network_latency_ms: 12,
       };
       fetchMock.mockResolvedValue(jsonResponse(core200));
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 500 },
       });
 
@@ -336,7 +336,7 @@ describe("AgenticWalletRouter", () => {
     it("throws GatewayError with the Core circuit-breaker message on HTTP 429", async () => {
       const message = "Pay-Translator Circuit Breaker Tripped: Velocity Limit Exceeded";
       fetchMock.mockResolvedValue(jsonResponse({ status: "error", message }, 429));
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 500 },
       });
 
@@ -355,7 +355,7 @@ describe("AgenticWalletRouter", () => {
     it("throws GatewayError for a missing-signature 400 with code invalid_signature", async () => {
       const body = { error: "Missing signature", code: "invalid_signature" };
       fetchMock.mockResolvedValue(jsonResponse(body, 400));
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 500 },
       });
 
@@ -381,7 +381,7 @@ describe("AgenticWalletRouter", () => {
           }),
       );
 
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 100 },
       });
 
@@ -402,7 +402,7 @@ describe("AgenticWalletRouter", () => {
 
     it("serializes a burst of reservations so the hourly sum never exceeds the cap", async () => {
       fetchMock.mockImplementation(async () => gatewayOk({ amount: 40 }));
-      const router = new AgenticWalletRouter(randomSeedHex(), {
+      const router = new WireSwitch(randomSeedHex(), {
         circuitBreaker: { maxPerTransactionUSD: 40, maxPerHourUSD: 100 },
       });
 
