@@ -1,6 +1,6 @@
 {
   "name": "agentic-wallet-router",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TypeScript client SDK that routes agentic wallet payments across protocols with local circuit-breaker limits and Ed25519-signed intents.",
   "type": "module",
   "main": "./dist/index.js",
