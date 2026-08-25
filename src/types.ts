@@ -18,8 +18,8 @@ export interface WireSwitchOptions {
   /**
    * Optional gateway URL override. When omitted, the client uses
    * `process.env.ROUTER_GATEWAY_URL`, then falls back to
-   * `http://127.0.0.1:8080/v1/translate` for local Docker/Core.
-   * Production sets `ROUTER_GATEWAY_URL`.
+   * `http://127.0.0.1:8080/v1/translate` (local gateway only).
+   * Hosted use sets `gatewayUrl` or `ROUTER_GATEWAY_URL` to `https://wireswitch.io/v1/translate`.
    */
   gatewayUrl?: string;
   /**
