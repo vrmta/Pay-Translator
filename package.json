@@ -1,0 +1,48 @@
+{
+  "name": "agentic-wallet-router",
+  "version": "1.0.0",
+  "description": "TypeScript client SDK that routes agentic wallet payments across protocols with local circuit-breaker limits and Ed25519-signed intents.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "wallet",
+    "router",
+    "agentic",
+    "payments",
+    "sdk",
+    "ed25519",
+    "circuit-breaker"
+  ],
+  "author": "agentic-wallet-router contributors",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@noble/ed25519": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.9"
+  }
+}
