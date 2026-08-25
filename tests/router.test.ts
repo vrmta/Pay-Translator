@@ -292,6 +292,71 @@ describe("AgenticWalletRouter", () => {
         return true;
       });
     });
+
+    it("parses a Core 200 translate payload into TranslationResponse", async () => {
+      const core200 = {
+        nexus_routing_id: "nexus_abc123",
+        settled: true,
+        timestamp: "2026-08-24T18:00:00.000Z",
+        network_latency_ms: 12,
+      };
+      fetchMock.mockResolvedValue(jsonResponse(core200));
+      const router = new AgenticWalletRouter(randomSeedHex(), {
+        circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 500 },
+      });
+
+      const result: TranslationResponse = await router.routePayment(SAMPLE_ROUTE);
+
+      expect(result).toEqual({
+        success: true,
+        status: "success",
+        translationId: "nexus_abc123",
+        requestId: "nexus_abc123",
+        ingressProtocol: SAMPLE_ROUTE.ingressProtocol,
+        egressProtocol: SAMPLE_ROUTE.egressProtocol,
+        amount: SAMPLE_ROUTE.amount,
+        recipientMerchantId: SAMPLE_ROUTE.recipientMerchantId,
+        timestamp: "2026-08-24T18:00:00.000Z",
+      });
+    });
+
+    it("throws GatewayError with the Core circuit-breaker message on HTTP 429", async () => {
+      const message = "Pay-Translator Circuit Breaker Tripped: Velocity Limit Exceeded";
+      fetchMock.mockResolvedValue(jsonResponse({ status: "error", message }, 429));
+      const router = new AgenticWalletRouter(randomSeedHex(), {
+        circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 500 },
+      });
+
+      await expect(router.routePayment(SAMPLE_ROUTE)).rejects.toSatisfy((error: unknown) => {
+        expect(error).toBeInstanceOf(GatewayError);
+        expect(error).toMatchObject({
+          statusCode: 429,
+          code: "GATEWAY_ERROR",
+          message,
+          body: { status: "error", message },
+        });
+        return true;
+      });
+    });
+
+    it("throws GatewayError for a missing-signature 400 with code invalid_signature", async () => {
+      const body = { error: "Missing signature", code: "invalid_signature" };
+      fetchMock.mockResolvedValue(jsonResponse(body, 400));
+      const router = new AgenticWalletRouter(randomSeedHex(), {
+        circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 500 },
+      });
+
+      await expect(router.routePayment(SAMPLE_ROUTE)).rejects.toSatisfy((error: unknown) => {
+        expect(error).toBeInstanceOf(GatewayError);
+        expect(error).toMatchObject({
+          statusCode: 400,
+          code: "GATEWAY_ERROR",
+          message: "Missing signature",
+          body: { error: "Missing signature", code: "invalid_signature" },
+        });
+        return true;
+      });
+    });
   });
 
   describe("concurrent hourly-cap safety", () => {

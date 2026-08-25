@@ -66,7 +66,7 @@ const transaction = await router.routePayment({
 console.log(transaction.settled, transaction.latencyMs);
 ```
 
-Point the client at your gateway with `ROUTER_GATEWAY_URL` (defaults to `https://localhost:8080/v1/translate` for local work).
+Point the client at your gateway with `ROUTER_GATEWAY_URL` (defaults to `http://127.0.0.1:8080/v1/translate` for local Docker/Core). Production sets `ROUTER_GATEWAY_URL`.
 
 What just happened:
 

@@ -18,7 +18,8 @@ export interface AgenticWalletRouterOptions {
   /**
    * Optional gateway URL override. When omitted, the client uses
    * `process.env.ROUTER_GATEWAY_URL`, then falls back to
-   * `https://localhost:8080/v1/translate`.
+   * `http://127.0.0.1:8080/v1/translate` for local Docker/Core.
+   * Production sets `ROUTER_GATEWAY_URL`.
    */
   gatewayUrl?: string;
 }
@@ -82,6 +83,6 @@ export interface TranslationResponse {
   timestamp: string;
 }
 
-export const DEFAULT_GATEWAY_URL = "https://localhost:8080/v1/translate";
+export const DEFAULT_GATEWAY_URL = "http://127.0.0.1:8080/v1/translate";
 export const SIGNING_ALG = "ed25519" as const;
 export const HOUR_MS = 60 * 60 * 1000;

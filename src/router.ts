@@ -149,10 +149,10 @@ async function postSignedIntent(
   const rawBody = await readBody(response);
 
   if (!response.ok) {
-    throw new GatewayError(
-      `Translation gateway returned HTTP ${response.status}.`,
-      { statusCode: response.status, body: rawBody },
-    );
+    throw new GatewayError(messageFromGatewayBody(rawBody, response.status), {
+      statusCode: response.status,
+      body: rawBody,
+    });
   }
 
   return parseTranslationResponse(rawBody, envelope.intent, response.status);
@@ -198,14 +198,25 @@ function parseTranslationResponse(
     throw new GatewayError(message, { statusCode, body });
   }
 
-  const translationId = firstString(record, [
+  const idKeys = [
     "translationId",
     "translation_id",
     "requestId",
     "request_id",
     "id",
+    "nexus_routing_id",
+    "nexusRoutingId",
+  ];
+  const translationId = firstString(record, idKeys);
+  const requestId = firstString(record, [
+    "requestId",
+    "request_id",
+    "translationId",
+    "translation_id",
+    "id",
+    "nexus_routing_id",
+    "nexusRoutingId",
   ]);
-  const requestId = firstString(record, ["requestId", "request_id", "translationId", "translation_id", "id"]);
 
   if (translationId === undefined || requestId === undefined) {
     throw new GatewayError("Translation gateway response is missing a translation/request id.", {
@@ -214,11 +225,13 @@ function parseTranslationResponse(
     });
   }
 
+  const settled = record["settled"] === true;
   const status =
-    firstString(record, ["status"]) ?? (record["success"] === true ? "success" : "ok");
+    firstString(record, ["status"]) ??
+    (record["success"] === true || settled ? "success" : "ok");
 
   return {
-    success: record["success"] === false ? false : true,
+    success: settled || record["success"] !== false,
     status,
     translationId,
     requestId,
@@ -239,4 +252,17 @@ function firstString(record: Record<string, unknown>, keys: string[]): string | 
     }
   }
   return undefined;
+}
+
+function messageFromGatewayBody(body: unknown, statusCode: number): string {
+  if (typeof body === "object" && body !== null && !Array.isArray(body)) {
+    const record = body as Record<string, unknown>;
+    if (typeof record["error"] === "string" && record["error"].length > 0) {
+      return record["error"];
+    }
+    if (typeof record["message"] === "string" && record["message"].length > 0) {
+      return record["message"];
+    }
+  }
+  return `Translation gateway returned HTTP ${statusCode}.`;
 }
