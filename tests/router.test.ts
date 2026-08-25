@@ -221,6 +221,19 @@ describe("AgenticWalletRouter", () => {
       expect(fetchMock.mock.calls[0]?.[0]).toBe(DEFAULT_GATEWAY_URL);
     });
 
+    it("sends Authorization Bearer when apiKey is provided", async () => {
+      fetchMock.mockResolvedValue(gatewayOk());
+      const router = new AgenticWalletRouter(randomSeedHex(), {
+        circuitBreaker: { maxPerTransactionUSD: 100, maxPerHourUSD: 500 },
+        apiKey: "pt_test_unit",
+      });
+
+      await router.routePayment(SAMPLE_ROUTE);
+      const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+      const headers = init.headers as Record<string, string>;
+      expect(headers["Authorization"]).toBe("Bearer pt_test_unit");
+    });
+
     it("includes a verifiable Ed25519 signature over canonical intent JSON", async () => {
       const seed = ed25519.utils.randomPrivateKey();
       fetchMock.mockResolvedValue(gatewayOk());

@@ -22,6 +22,12 @@ export interface AgenticWalletRouterOptions {
    * Production sets `ROUTER_GATEWAY_URL`.
    */
   gatewayUrl?: string;
+  /**
+   * Optional issued developer API key (`pt_live_` / `pt_test_`).
+   * When set, POST /v1/translate sends `Authorization: Bearer ${apiKey}`.
+   * When omitted, the header is not sent. Author: Varun M
+   */
+  apiKey?: string;
 }
 
 /**

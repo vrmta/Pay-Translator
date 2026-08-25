@@ -23,6 +23,7 @@ export class AgenticWalletRouter {
   private readonly seed: Uint8Array;
   private readonly circuitBreaker: CircuitBreaker;
   private readonly gatewayUrl: string;
+  private readonly apiKey: string | undefined;
 
   /**
    * @param encryptedPrivateKey Hex or base64 32-byte Ed25519 seed. If the
@@ -30,6 +31,7 @@ export class AgenticWalletRouter {
    * @param options.circuitBreaker Local USD caps (`maxPerTransactionUSD`,
    *   `maxPerHourUSD`).
    * @param options.gatewayUrl Optional override for `ROUTER_GATEWAY_URL`.
+   * @param options.apiKey Optional issued developer key sent as Bearer.
    */
   constructor(encryptedPrivateKey: string, options: AgenticWalletRouterOptions) {
     if (options === undefined || options === null || typeof options !== "object") {
@@ -39,6 +41,7 @@ export class AgenticWalletRouter {
     this.seed = parsePrivateKey(encryptedPrivateKey);
     this.circuitBreaker = new CircuitBreaker(options.circuitBreaker);
     this.gatewayUrl = resolveGatewayUrl(options.gatewayUrl);
+    this.apiKey = optionalApiKey(options.apiKey);
   }
 
   /**
@@ -60,13 +63,21 @@ export class AgenticWalletRouter {
         alg: SIGNING_ALG,
       };
 
-      const response = await postSignedIntent(this.gatewayUrl, envelope);
+      const response = await postSignedIntent(this.gatewayUrl, envelope, this.apiKey);
       return response;
     } catch (error) {
       await this.circuitBreaker.release(reservationId);
       throw error;
     }
   }
+}
+
+function optionalApiKey(value: string | undefined): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed === "" ? undefined : trimmed;
 }
 
 function resolveGatewayUrl(override: string | undefined): string {
@@ -124,22 +135,28 @@ function buildIntent(options: RoutePaymentOptions): PaymentIntent {
 async function postSignedIntent(
   url: string,
   envelope: SignedIntentEnvelope,
+  apiKey?: string,
 ): Promise<TranslationResponse> {
   if (typeof fetch !== "function") {
     throw new TransportError("Global fetch is not available in this runtime.");
+  }
+
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+    accept: "application/json",
+    "x-signature": envelope.signature,
+    "x-public-key": envelope.publicKey,
+    "x-signing-alg": envelope.alg,
+  };
+  if (apiKey !== undefined) {
+    headers.Authorization = `Bearer ${apiKey}`;
   }
 
   let response: Response;
   try {
     response = await fetch(url, {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-        accept: "application/json",
-        "x-signature": envelope.signature,
-        "x-public-key": envelope.publicKey,
-        "x-signing-alg": envelope.alg,
-      },
+      headers,
       body: JSON.stringify(envelope),
     });
   } catch (cause) {
