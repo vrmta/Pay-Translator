@@ -18,12 +18,12 @@ export interface WireSwitchOptions {
   /**
    * Optional gateway URL override. When omitted, the client uses
    * `process.env.ROUTER_GATEWAY_URL`, then falls back to
-   * `http://127.0.0.1:8080/v1/translate` (local gateway only).
+   * `http://127.0.0.1:8080/v1/translate` (local engine only).
    * Hosted use sets `gatewayUrl` or `ROUTER_GATEWAY_URL` to `https://wireswitch.io/v1/translate`.
    */
   gatewayUrl?: string;
   /**
-   * Optional issued developer API key (`pt_live_` / `pt_test_`).
+   * Optional issued developer API key (`pt_test_`). Live keys are not public.
    * When set, POST /v1/translate sends `Authorization: Bearer ${apiKey}`.
    * When omitted, the header is not sent. Author: Varun M
    */
@@ -36,7 +36,7 @@ export interface WireSwitchOptions {
 export interface RoutePaymentOptions {
   /** Ingress protocol identifier, e.g. `GOOGLE_AP2`. */
   ingressProtocol: string;
-  /** Egress protocol identifier, e.g. `STRIPE_ACP`. */
+  /** Egress protocol identifier, e.g. `STRIPE_PI` (alias `STRIPE_ACP`, Stripe PaymentIntent). */
   egressProtocol: string;
   /** Payment amount in USD. */
   amount: number;

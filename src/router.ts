@@ -13,7 +13,7 @@ import { DEFAULT_GATEWAY_URL, SIGNING_ALG } from "./types.js";
 
 /**
  * Client SDK for posting a locally signed payment intent to a
- * translation gateway. Author: Varun M
+ * protocol-translation hop. Author: Varun M
  *
  * The circuit breaker runs locally and in-memory. Budgets are reserved under
  * a mutex before any signing or HTTP. Intents are signed with Ed25519

@@ -1,8 +1,14 @@
 # wireswitch
 
-TypeScript client for [WireSwitch](https://wireswitch.io). Signs payment intents on the agent (Ed25519), enforces in-process spend caps, then POSTs a signed envelope to the gateway.
+TypeScript client for [WireSwitch](https://wireswitch.io). Signs payment intents on the agent (Ed25519), enforces in-process spend caps, then POSTs a signed envelope to a protocol-translation hop.
 
-The hosted hop accepts a Google AP2-shaped envelope and settles a Stripe **test** PaymentIntent. It is not ACP `checkout_sessions`, not x402, and not a generic protocol translator.
+WireSwitch is a **general protocol translator**. You name `ingressProtocol` and `egressProtocol` on one `POST`. The hosted hop is `https://wireswitch.io/v1/translate`.
+
+**Test is free.** Sign up at [wireswitch.io/signup](https://wireswitch.io/signup) (Google or email) and issue a `pt_test_` key. Live keys are not public.
+
+The hosted path that works today is a signed envelope → **Stripe test PaymentIntent**. `STRIPE_PI` and `STRIPE_ACP` are that rail (same PaymentIntent). It is not ACP `checkout_sessions`.
+
+The engine also routes x402 cells. Hosted x402 settle needs facilitator credentials that are not on the public hop yet — do not treat those pairs as a promised hosted rail. Unknown pairs return 422.
 
 ## Install
 
@@ -10,9 +16,9 @@ The hosted hop accepts a Google AP2-shaped envelope and settles a Stripe **test*
 npm i wireswitch
 ```
 
-## Use the hosted gateway
+## Use the hosted hop
 
-You need an issued API key (`pt_test_` / `pt_live_`). Do not omit `gatewayUrl` in production.
+Set `gatewayUrl` to `https://wireswitch.io/v1/translate` and `apiKey` to your `pt_test_` key. Without `gatewayUrl` / `ROUTER_GATEWAY_URL`, the client POSTs to `http://127.0.0.1:8080/v1/translate` (local engine only).
 
 ```ts
 import { WireSwitch } from "wireswitch";
@@ -28,15 +34,22 @@ const client = new WireSwitch(process.env.WALLET_PRIVATE_KEY!, {
 
 const result = await client.routePayment({
   ingressProtocol: "GOOGLE_AP2",
-  egressProtocol: "STRIPE_ACP",
+  egressProtocol: "STRIPE_PI",
   amount: 19.99,
   recipientMerchantId: "merchant_123",
 });
 ```
 
-Without `gatewayUrl` / `ROUTER_GATEWAY_URL`, the client POSTs to `http://127.0.0.1:8080/v1/translate` (local gateway only).
+`apiKey` is sent as `Authorization: Bearer`. The hop rejects unsigned or unauthenticated translate calls. `WALLET_PRIVATE_KEY` is a 32-byte Ed25519 seed (hex or base64), not the API key.
 
-`apiKey` is sent as `Authorization: Bearer`. The hosted gateway rejects unsigned or unauthenticated translate calls.
+## Pairs
+
+| Ingress | Egress | Hosted hop today |
+| --- | --- | --- |
+| `GOOGLE_AP2` | `STRIPE_PI` (`STRIPE_ACP`) | Stripe **test** PaymentIntent |
+| `GOOGLE_AP2` | `COINBASE_X402` | Engine cell; hosted facilitator not public |
+| `COINBASE_X402` | `STRIPE_PI` (`STRIPE_ACP`) | Engine cell; needs `x402Payment` |
+| `COINBASE_X402` | `COINBASE_X402` | Engine cell; hosted facilitator not public |
 
 ## License
 

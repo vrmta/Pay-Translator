@@ -1,7 +1,7 @@
 {
   "name": "wireswitch",
-  "version": "1.1.1",
-  "description": "TypeScript client SDK that signs payment intents locally and posts them to a translation gateway, with in-process circuit-breaker limits.",
+  "version": "1.1.2",
+  "description": "WireSwitch client: sign payment intents locally (Ed25519) and POST them to a protocol-translation hop.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -25,11 +25,13 @@
   },
   "keywords": [
     "wireswitch",
-    "wallet",
     "payments",
-    "sdk",
+    "protocol-translator",
+    "ap2",
+    "x402",
+    "stripe",
     "ed25519",
-    "circuit-breaker"
+    "sdk"
   ],
   "author": "Varun M",
   "license": "MIT",
