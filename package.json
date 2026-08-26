@@ -1,6 +1,6 @@
 {
   "name": "wireswitch",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "TypeScript client SDK that signs payment intents locally and posts them to a translation gateway, with in-process circuit-breaker limits.",
   "type": "module",
   "main": "./dist/index.js",
