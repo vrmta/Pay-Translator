@@ -16,6 +16,14 @@ The engine also routes x402 cells. Hosted x402 settle needs facilitator credenti
 npm i wireswitch
 ```
 
+The snippet needs two secrets. `WIRESWITCH_API_KEY` is the `pt_test_` key from [signup](https://wireswitch.io/signup). `WALLET_PRIVATE_KEY` is a 32-byte Ed25519 seed the agent uses to sign the envelope. It is not the API key and not a bank account. For test, generate a throwaway hex seed:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Paste that value into `WALLET_PRIVATE_KEY`.
+
 ## Use the hosted hop
 
 Set `gatewayUrl` to `https://wireswitch.io/v1/translate` and `apiKey` to your `pt_test_` key. Without `gatewayUrl` / `ROUTER_GATEWAY_URL`, the client POSTs to `http://127.0.0.1:8080/v1/translate` (local engine only).
@@ -40,7 +48,7 @@ const result = await client.routePayment({
 });
 ```
 
-`apiKey` is sent as `Authorization: Bearer`. The hop rejects unsigned or unauthenticated translate calls. `WALLET_PRIVATE_KEY` is a 32-byte Ed25519 seed (hex or base64), not the API key.
+`apiKey` is sent as `Authorization: Bearer`. The hop rejects unsigned or unauthenticated translate calls.
 
 ## Pairs
 

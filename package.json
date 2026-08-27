@@ -1,6 +1,6 @@
 {
   "name": "wireswitch",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "WireSwitch client: sign payment intents locally (Ed25519) and POST them to a protocol-translation hop.",
   "type": "module",
   "main": "./dist/index.js",
